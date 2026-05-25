@@ -3,278 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Pixel Parkour - Web Portal</title>
-    <style>
-        body {
-            margin: 0;
-            background-color: #12121a;
-            color: #fff;
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        /* GIAO DIỆN MENU CHÍNH (GIỐNG TRANG WEB) */
-        .web-portal {
-            background: #1c1c27;
-            border: 4px solid #3a3a50;
-            padding: 30px;
-            width: 500px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-            border-radius: 6px;
-        }
-        h1 { color: #ffbc00; font-size: 28px; margin-bottom: 5px; text-shadow: 3px 3px #000; }
-        .subtitle { color: #8a8ab0; font-size: 12px; margin-bottom: 30px; }
-        
-        .menu-box {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .btn-menu {
-            background: #2a2a3a;
-            color: #fff;
-            border: 2px solid #52527a;
-            padding: 15px;
-            font-size: 16px;
-            font-family: inherit;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-            text-transform: uppercase;
-        }
-        .btn-menu:hover { background: #ff4757; border-color: #ff6b6b; transform: scale(1.02); }
-        
-        /* KHU VỰC NHẬP CODE PHÒNG (ẨN MẶC ĐỊNH) */
-        .room-section {
-            display: none;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px dashed #3a3a50;
-        }
-        .input-code {
-            background: #12121a;
-            border: 2px solid #52527a;
-            color: #ffbc00;
-            padding: 10px;
-            font-family: inherit;
-            font-size: 18px;
-            text-align: center;
-            width: 60%;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-        }
-        .room-actions { display: flex; gap: 10px; justify-content: center; }
-        .btn-action {
-            padding: 10px 20px;
-            font-family: inherit;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-        }
-        .btn-blue { background: #1e90ff; color: white; }
-        .btn-green { background: #2ed573; color: white; }
-        .btn-back { background: #57606f; color: white; margin-top: 15px; width: 100%; }
-
-        /* MÀN HÌNH CHỜ TRONG PHÒNG GAME */
-        .game-lobby {
-            display: none;
-            text-align: center;
-        }
-        .room-info {
-            background: #252535;
-            padding: 10px;
-            border: 2px solid #ffbc00;
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #ffbc00;
-        }
-        canvas { border: 4px solid #3a3a50; background: #282c34; image-rendering: pixelated; }
-    </style>
+    <title>Pixel Parkour Ultimate Studio</title>
+    <!-- Nhúng file CSS bên ngoài vào -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="web-portal" id="mainPortal">
+    <!-- THANH ĐIỀU HƯỚNG TÀI KHOẢN (NAVBAR) -->
+    <div class="account-bar">
+        <div class="user-info" id="navUserInfo">
+            Trạng thái: <span class="status-logged-out">Chưa đăng nhập</span> (Vui lòng đăng nhập để chơi)
+        </div>
+        <div class="auth-buttons" id="navAuthButtons">
+            <button class="btn-action btn-blue" onclick="switchWindow('loginWindow')">Đăng Nhập</button>
+            <button class="btn-action btn-green" onclick="switchWindow('registerWindow')">Đăng Ký</button>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH CHỜ TRANG WEB (MAIN PORTAL) -->
+    <div class="window-box" id="mainPortal">
         <h1>PIXEL PARKOUR ONLINE</h1>
-        <div class="subtitle">Hệ thống Cổng game chạy trên Web v1.0</div>
+        <div class="subtitle">Hệ thống Cổng sáng tạo & Quản lý tài khoản</div>
         
-        <div class="menu-box" id="menuButtons">
-            <button class="btn-menu" onclick="openFeature('VẼ BẢN ĐỒ')">🛠️ Vẽ Bản Đồ (Map Editor)</button>
-            <button class="btn-menu" onclick="openFeature('VẼ TRANG PHỤC')">🎨 Vẽ Trang Phục (Skin Studio)</button>
-            <button class="btn-menu" onclick="showRoomSection()">🎮 Tham Gia Trò Chơi (Play Game)</button>
+        <div class="menu-box">
+            <button class="btn-menu" id="btnMap" onclick="switchWindow('mapStudio')" disabled>🛠️ Chế độ Vẽ Bản Đồ (Map Editor)</button>
+            <button class="btn-menu" id="btnSkin" onclick="switchWindow('skinStudio')" disabled>🎨 Chế độ Vẽ Trang Phục (Skin Studio)</button>
+            <button class="btn-menu" id="btnPlay" onclick="showRoomSection()" disabled>🎮 Tham Gia Trò Chơi (Play Game)</button>
         </div>
 
         <div class="room-section" id="roomSection">
-            <h3 style="margin: 0 0 15px 0; font-size: 14px;">CHỌN PHƯƠNG THỨC VÀO TRẬN</h3>
             <input type="text" id="roomCodeInput" class="input-code" placeholder="NHẬP CODE PHÒNG...">
-            
             <div class="room-actions">
-                <button class="btn-action btn-blue" onclick="joinRoomByCode()">Vào Phòng</button>
-                <button class="btn-action btn-green" onclick="createNewRoom()">Tự Tạo Phòng Mới</button>
+                <button class="btn-action btn-blue" onclick="enterGameRoom(false)">Vào Phòng</button>
+                <button class="btn-action btn-green" onclick="enterGameRoom(true)">Tạo Phòng Mới</button>
             </div>
             <button class="btn-action btn-back" onclick="hideRoomSection()">Quay Lại Menu</button>
         </div>
     </div>
 
-    <div class="game-lobby" id="gameLobby">
-        <div class="room-info" id="roomIdentityDisplay">CODE PHÒNG: XXXXX | VAI TRÒ: NGƯỜI CHƠI</div>
-        <canvas id="lobbyCanvas" width="700" height="350"></canvas>
-        <p style="color: #a0a0c0; font-size: 12px; margin-top: 10px;">
-            Nhấn <b>A, D</b> để chạy thử | Nhấn <b>SPACE / W</b> để nhảy khởi động | Chờ chủ phòng bắt đầu trận đấu...
-        </p>
-        <button class="btn-action btn-back" style="width: 200px;" onclick="leaveRoom()">Thoát Phòng</button>
+    <!-- CỬA SỔ ĐĂNG KÝ TÀI KHOẢN -->
+    <div class="window-box small-window" id="registerWindow">
+        <h1>TẠO TÀI KHOẢN</h1>
+        <div class="subtitle">Đăng ký để lưu trữ dữ liệu của riêng bạn</div>
+        <div class="auth-form">
+            <input type="text" id="regUser" placeholder="TÊN TÀI KHOẢN (USERNAME)">
+            <input type="password" id="regPass" placeholder="MẬT KHẨU">
+            <button class="btn-action btn-green" onclick="handleRegister()">Xác Nhận Đăng Ký</button>
+            <button class="btn-action btn-back" onclick="switchWindow('mainPortal')">Hủy bỏ</button>
+        </div>
     </div>
 
-<script>
-    // Điều hướng giao diện
-    const mainPortal = document.getElementById("mainPortal");
-    const menuButtons = document.getElementById("menuButtons");
-    const roomSection = document.getElementById("roomSection");
-    const gameLobby = document.getElementById("gameLobby");
-    const roomCodeInput = document.getElementById("roomCodeInput");
-    const roomIdentityDisplay = document.getElementById("roomIdentityDisplay");
+    <!-- CỬA SỔ ĐĂNG NHẬP TÀI KHOẢN -->
+    <div class="window-box small-window" id="loginWindow">
+        <h1>ĐĂNG NHẬP GAME</h1>
+        <div class="subtitle">Nhập thông tin tài khoản để vào hệ thống</div>
+        <div class="auth-form">
+            <input type="text" id="logUser" placeholder="TÊN TÀI KHOẢN">
+            <input type="password" id="logPass" placeholder="MẬT KHẨU">
+            <button class="btn-action btn-blue" onclick="handleLogin()">Đăng Nhập Ngay</button>
+            <button class="btn-action btn-back" onclick="switchWindow('mainPortal')">Hủy bỏ</button>
+        </div>
+    </div>
 
-    let isRoomOwner = false; // Kiểm tra xem có phải chủ phòng không
-    let currentRoomCode = "";
+    <!-- CHẾ ĐỘ VẼ TRANG PHỤC (SKIN STUDIO) -->
+    <div class="window-box" id="skinStudio">
+        <h1>🎨 SKIN DESIGN STUDIO</h1>
+        <div class="subtitle">Tự vẽ chiếc áo Pixel của riêng bạn và áp dụng ngay vào game</div>
+        <div class="studio-layout">
+            <div class="pixel-grid" id="pixelGrid"></div>
+            <div class="palette" id="paletteContainer">
+                <!-- Màu sắc sẽ được tự động sinh ra từ file JS -->
+            </div>
+        </div>
+        <div class="studio-actions">
+            <button class="btn-action btn-green" onclick="switchWindow('mainPortal')">Lưu & Quay Lại Trang Chủ</button>
+        </div>
+    </div>
 
-    // Hàm thông báo cho các tính năng vẽ (Sẽ lập trình sâu vào sau)
-    function openFeature(name) {
-        alert(`Bạn vừa mở tính năng: ${name}.\nTính năng này đang được phát triển tiếp theo!`);
-    }
+    <!-- CHẾ ĐỘ VẼ BẢN ĐỒ (MAP EDITOR) -->
+    <div class="window-box" id="mapStudio">
+        <h1>🛠️ MAP EDITOR STUDIO</h1>
+        <div class="subtitle">Click và rê chuột trên ô lưới để tự tay xây dựng chướng ngại vật</div>
+        <div class="tile-selector">
+            <button class="tile-option active" id="tile-1" onclick="selectTile(1)">🧱 KHỐI ĐẤT</button>
+            <button class="tile-option" id="tile-2" onclick="selectTile(2)">🔺 GAI NHỌN (BẪY)</button>
+            <button class="tile-option" id="tile-0" onclick="selectTile(0)">❌ TẨY XÓA</button>
+        </div>
+        <canvas id="editorCanvas" class="editor-canvas" width="700" height="320"></canvas>
+        <div class="studio-actions">
+            <button class="btn-action btn-blue" onclick="clearCustomMap()">Xóa Hết Làm Lại</button>
+            <button class="btn-action btn-green" onclick="switchWindow('mainPortal')">Lưu Bản Đồ & Về Menu</button>
+        </div>
+    </div>
 
-    // Hiển thị phần nhập Code phòng
-    function showRoomSection() {
-        roomSection.style.display = "block";
-    }
-    function hideRoomSection() {
-        roomSection.style.display = "none";
-    }
+    <!-- MÀN HÌNH SẢNH CHỜ TRONG PHÒNG GAME -->
+    <div class="window-box large-window" id="gameLobby">
+        <div class="room-info" id="roomIdentityDisplay">CODE PHÒNG: XXXXX</div>
+        <canvas id="lobbyCanvas" width="700" height="350"></canvas>
+        <p class="game-controls-hint">
+            <b>Nút điều khiển:</b> A, D để di chuyển | SPACE hoặc W để nhảy Parkour. Nhân vật sẽ mặc đúng chiếc áo bạn tự vẽ!
+        </p>
+        <button class="btn-action btn-back" onclick="switchWindow('mainPortal')">Thoát Phòng Game</button>
+    </div>
 
-    // HÀM 1: TỰ TẠO PHÒNG MỚI (SỞ HỮU CODE)
-    function createNewRoom() {
-        // Tạo ngẫu nhiên 1 chuỗi code phòng gồm 5 chữ cái ngẫu nhiên (Ví dụ: PK7XW)
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let generatedCode = '';
-        for (let i = 0; i < 5; i++) {
-            generatedCode += characters.charAt(Math.floor(Math.random() * characters.length));
-        }
-        
-        currentRoomCode = generatedCode;
-        isRoomOwner = true; // Đánh dấu là chủ phòng
-
-        // Chuyển giao diện sang sảnh chờ game
-        mainPortal.style.display = "none";
-        gameLobby.style.display = "block";
-        roomIdentityDisplay.innerText = `👑 CODE PHÒNG CỦA BẠN: ${currentRoomCode} (BẠN LÀ CHỦ PHÒNG)`;
-        roomIdentityDisplay.style.borderColor = "#2ed573";
-
-        // Kích hoạt cơ chế nhảy nhót thử nghiệm trong sảnh chờ
-        initLobbyPhysics();
-    }
-
-    // HÀM 2: NHẬP CODE ĐỂ THAM GIA PHÒNG KHÁC
-    function joinRoomByCode() {
-        let enteredCode = roomCodeInput.value.trim().toUpperCase();
-        
-        if (enteredCode === "") {
-            alert("Vui lòng nhập mã code phòng để tham gia!");
-            return;
-        }
-
-        currentRoomCode = enteredCode;
-        isRoomOwner = false; // Chỉ là người tham gia
-
-        // Chuyển giao diện sang sảnh chờ game
-        mainPortal.style.display = "none";
-        gameLobby.style.display = "block";
-        roomIdentityDisplay.innerText = `🎮 ĐÃ VÀO PHÒNG: ${currentRoomCode} (BẠN LÀ THÀNH VIÊN)`;
-        roomIdentityDisplay.style.borderColor = "#1e90ff";
-
-        initLobbyPhysics();
-    }
-
-    // Thoát khỏi phòng game quay lại web portal
-    function leaveRoom() {
-        gameLobby.style.display = "none";
-        mainPortal.style.display = "block";
-        roomCodeInput.value = "";
-    }
-
-    // --- LOGIC PARKOUR KHỞI ĐỘNG TRONG SẢNH CHỜ ---
-    const canvas = document.getElementById("lobbyCanvas");
-    const ctx = canvas.getContext("2d");
-    const GRAVITY = 0.4;
-    const KEYS = {};
-    
-    const player = { x: 100, y: 200, width: 20, height: 28, vx: 0, vy: 0, speed: 4, jumpForce: 8.5, isGrounded: false };
-    const platforms = [
-        { x: 0, y: 320, width: 700, height: 30 },
-        { x: 200, y: 240, width: 300, height: 15 }
-    ];
-
-    window.addEventListener("keydown", (e) => KEYS[e.code] = true);
-    window.addEventListener("keyup", (e) => KEYS[e.code] = false);
-
-    function initLobbyPhysics() {
-        // Reset vị trí người chơi khi vào sảnh mới
-        player.x = 100; player.y = 200; player.vx = 0; player.vy = 0;
-    }
-
-    function gameLoop() {
-        if (gameLobby.style.display === "block") {
-            // Cập nhật di chuyển
-            if (KEYS["KeyA"] || KEYS["ArrowLeft"]) player.vx = -player.speed;
-            else if (KEYS["KeyD"] || KEYS["ArrowRight"]) player.vx = player.speed;
-            else player.vx = 0;
-
-            player.vy += GRAVITY;
-            player.x += player.vx;
-
-            // Chặn biên màn hình trái phải
-            if (player.x < 0) player.x = 0;
-            if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
-
-            player.y += player.vy;
-            player.isGrounded = false;
-
-            // Xử lý va chạm nền tảng
-            for (let plat of platforms) {
-                if (player.x < plat.x + plat.width && player.x + player.width > plat.x &&
-                    player.y < plat.y + plat.height && player.y + player.height > plat.y) {
-                    if (player.vy > 0) {
-                        player.y = plat.y - player.height;
-                        player.vy = 0;
-                        player.isGrounded = true;
-                    }
-                }
-            }
-
-            if ((KEYS["KeyW"] || KEYS["Space"]) && player.isGrounded) {
-                player.vy = -player.jumpForce;
-                player.isGrounded = false;
-            }
-
-            // Vẽ đồ họa
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Vẽ map sảnh chờ
-            ctx.fillStyle = "#3e445b";
-            for (let plat of platforms) ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-
-            // Vẽ nhân vật pixel của người chơi
-            ctx.fillStyle = isRoomOwner ? "#2ed573" : "#ff4757"; // Chủ phòng màu xanh lá, khách màu đỏ
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-            
-            // Vẽ mắt
-            ctx.fillStyle = "#fff";
-            ctx.fillRect(player.vx >= 0 ? player.x + 12 : player.x + 3, player.y + 5, 5, 5);
-        }
-        requestAnimationFrame(gameLoop);
-    }
-    gameLoop();
-</script>
-
+    <!-- Tải các file Logic Javascript theo đúng thứ tự liên kết -->
+    <script src="auth.js"></script>
+    <script src="editor.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
