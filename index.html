@@ -3,260 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Parkour Lobby & Editor</title>
+    <title>Retro Pixel Parkour - Web Portal</title>
     <style>
         body {
             margin: 0;
-            background-color: #1a1a24;
+            background-color: #12121a;
             color: #fff;
             font-family: 'Courier New', Courier, monospace;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            gap: 20px;
         }
-        .container {
+        /* GIAO DIỆN MENU CHÍNH (GIỐNG TRANG WEB) */
+        .web-portal {
+            background: #1c1c27;
+            border: 4px solid #3a3a50;
+            padding: 30px;
+            width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            border-radius: 6px;
+        }
+        h1 { color: #ffbc00; font-size: 28px; margin-bottom: 5px; text-shadow: 3px 3px #000; }
+        .subtitle { color: #8a8ab0; font-size: 12px; margin-bottom: 30px; }
+        
+        .menu-box {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 15px;
         }
-        h1 { margin: 0 0 10px 0; font-size: 22px; text-shadow: 2px 2px #000; color: #ffbc00; }
-        canvas {
-            border: 4px solid #3a3a50;
-            background-color: #282c34;
-            image-rendering: pixelated;
-        }
-        /* Giao diện bảng vẽ Pixel bên cạnh */
-        .editor-panel {
-            background: #252833;
-            border: 4px solid #3a3a50;
+        .btn-menu {
+            background: #2a2a3a;
+            color: #fff;
+            border: 2px solid #52527a;
             padding: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border-radius: 4px;
-        }
-        .pixel-grid {
-            display: grid;
-            grid-template-columns: repeat(16, 15px);
-            grid-template-rows: repeat(16, 15px);
-            gap: 1px;
-            background: #111;
-            padding: 2px;
-            border: 2px solid #555;
-        }
-        .pixel-cell {
-            width: 15px;
-            height: 15px;
-            background-color: #fff;
-            cursor: pointer;
-        }
-        .palette {
-            display: flex;
-            gap: 5px;
-            margin: 10px 0;
-        }
-        .color-dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 3px;
-            cursor: pointer;
-            border: 2px solid #fff;
-        }
-        .btn {
-            background-color: #ff4757;
-            color: white;
-            border: none;
-            padding: 8px 15px;
+            font-size: 16px;
             font-family: inherit;
             font-weight: bold;
             cursor: pointer;
+            transition: 0.2s;
             text-transform: uppercase;
-            box-shadow: 0 4px #c02c39;
         }
-        .btn:active { transform: translateY(4px); box-shadow: none; }
-        .controls { margin-top: 10px; font-size: 12px; color: #a0a0c0; text-align: center; }
+        .btn-menu:hover { background: #ff4757; border-color: #ff6b6b; transform: scale(1.02); }
+        
+        /* KHU VỰC NHẬP CODE PHÒNG (ẨN MẶC ĐỊNH) */
+        .room-section {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #3a3a50;
+        }
+        .input-code {
+            background: #12121a;
+            border: 2px solid #52527a;
+            color: #ffbc00;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 18px;
+            text-align: center;
+            width: 60%;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+        .room-actions { display: flex; gap: 10px; justify-content: center; }
+        .btn-action {
+            padding: 10px 20px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-blue { background: #1e90ff; color: white; }
+        .btn-green { background: #2ed573; color: white; }
+        .btn-back { background: #57606f; color: white; margin-top: 15px; width: 100%; }
+
+        /* MÀN HÌNH CHỜ TRONG PHÒNG GAME */
+        .game-lobby {
+            display: none;
+            text-align: center;
+        }
+        .room-info {
+            background: #252535;
+            padding: 10px;
+            border: 2px solid #ffbc00;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #ffbc00;
+        }
+        canvas { border: 4px solid #3a3a50; background: #282c34; image-rendering: pixelated; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1 id="gameStatus">ĐANG Ở MÀN HÌNH CHỜ (LOBBY)</h1>
-        <canvas id="gameCanvas" width="700" height="400"></canvas>
-        <div class="controls">
-            <b>A, D</b>: Chạy | <b>W / SPACE</b>: Nhảy & Nhảy Tường <br>
-            <i>Mẹo: Trong sảnh chờ, cậu vẫn có thể nhảy nhót parkour thoải mái!</i>
+    <div class="web-portal" id="mainPortal">
+        <h1>PIXEL PARKOUR ONLINE</h1>
+        <div class="subtitle">Hệ thống Cổng game chạy trên Web v1.0</div>
+        
+        <div class="menu-box" id="menuButtons">
+            <button class="btn-menu" onclick="openFeature('VẼ BẢN ĐỒ')">🛠️ Vẽ Bản Đồ (Map Editor)</button>
+            <button class="btn-menu" onclick="openFeature('VẼ TRANG PHỤC')">🎨 Vẽ Trang Phục (Skin Studio)</button>
+            <button class="btn-menu" onclick="showRoomSection()">🎮 Tham Gia Trò Chơi (Play Game)</button>
+        </div>
+
+        <div class="room-section" id="roomSection">
+            <h3 style="margin: 0 0 15px 0; font-size: 14px;">CHỌN PHƯƠNG THỨC VÀO TRẬN</h3>
+            <input type="text" id="roomCodeInput" class="input-code" placeholder="NHẬP CODE PHÒNG...">
+            
+            <div class="room-actions">
+                <button class="btn-action btn-blue" onclick="joinRoomByCode()">Vào Phòng</button>
+                <button class="btn-action btn-green" onclick="createNewRoom()">Tự Tạo Phòng Mới</button>
+            </div>
+            <button class="btn-action btn-back" onclick="hideRoomSection()">Quay Lại Menu</button>
         </div>
     </div>
 
-    <div class="editor-panel">
-        <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #00ffcc;">VẼ ÁO NHÂN VẬT (16x16)</h3>
-        <div class="pixel-grid" id="pixelGrid"></div>
-        
-        <div class="palette">
-            <div class="color-dot" style="background: #ff4757;" onclick="setCurrentColor('#ff4757')"></div>
-            <div class="color-dot" style="background: #2ed573;" onclick="setCurrentColor('#2ed573')"></div>
-            <div class="color-dot" style="background: #1e90ff;" onclick="setCurrentColor('#1e90ff')"></div>
-            <div class="color-dot" style="background: #ffa500;" onclick="setCurrentColor('#ffa500')"></div>
-            <div class="color-dot" style="background: #ffffff;" onclick="setCurrentColor('#ffffff')"></div>
-            <div class="color-dot" style="background: #2f3542;" onclick="setCurrentColor('#2f3542')"></div>
-        </div>
-
-        <button class="btn" onclick="applySkin()">Mặc Áo Này</button>
+    <div class="game-lobby" id="gameLobby">
+        <div class="room-info" id="roomIdentityDisplay">CODE PHÒNG: XXXXX | VAI TRÒ: NGƯỜI CHƠI</div>
+        <canvas id="lobbyCanvas" width="700" height="350"></canvas>
+        <p style="color: #a0a0c0; font-size: 12px; margin-top: 10px;">
+            Nhấn <b>A, D</b> để chạy thử | Nhấn <b>SPACE / W</b> để nhảy khởi động | Chờ chủ phòng bắt đầu trận đấu...
+        </p>
+        <button class="btn-action btn-back" style="width: 200px;" onclick="leaveRoom()">Thoát Phòng</button>
     </div>
 
 <script>
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+    // Điều hướng giao diện
+    const mainPortal = document.getElementById("mainPortal");
+    const menuButtons = document.getElementById("menuButtons");
+    const roomSection = document.getElementById("roomSection");
+    const gameLobby = document.getElementById("gameLobby");
+    const roomCodeInput = document.getElementById("roomCodeInput");
+    const roomIdentityDisplay = document.getElementById("roomIdentityDisplay");
 
-// Trạng thái game: "LOBBY" (Chờ) hoặc "GAMEPLAY" (Đang đấu)
-let gameState = "LOBBY"; 
-let lobbyTimer = 10; // 10 giây đếm ngược để bắt đầu trận
-let timerInterval;
+    let isRoomOwner = false; // Kiểm tra xem có phải chủ phòng không
+    let currentRoomCode = "";
 
-const GRAVITY = 0.4;
-const KEYS = {};
-
-// Khởi tạo người chơi
-const player = {
-    x: 100, y: 300, width: 24, height: 32, vx: 0, vy: 0,
-    speed: 4.5, jumpForce: 9, isGrounded: false, isOnWall: false, wallDir: 0
-};
-
-// Khởi tạo bộ nhớ skin (Mặc định là áo màu đỏ #ff4757 phủ đầy mảng 16x16)
-let playerSkin = Array(16).fill().map(() => Array(16).fill("#ff4757"));
-let currentColor = "#ff4757";
-
-// Địa hình map sảnh chờ
-const platforms = [
-    { x: 0, y: 370, width: 700, height: 30 },
-    { x: 250, y: 270, width: 200, height: 15 },
-    { x: 80, y: 190, width: 100, height: 15 },
-    { x: 520, y: 190, width: 100, height: 15 },
-    { x: 0, y: 0, width: 20, height: 400 }, // Tường trái để bám đuôi parkour
-    { x: 680, y: 0, width: 20, height: 400 } // Tường phải
-];
-
-// --- KHU VỰC XỬ LÝ BẢNG VẼ PIXEL ---
-const gridContainer = document.getElementById("pixelGrid");
-for (let r = 0; r < 16; r++) {
-    for (let c = 0; c < 16; c++) {
-        const cell = document.createElement("div");
-        cell.classList.add("pixel-cell");
-        cell.style.backgroundColor = "#ff4757"; // Áo đỏ mặc định
-        cell.addEventListener("click", () => {
-            cell.style.backgroundColor = currentColor;
-            playerSkin[r][c] = currentColor;
-        });
-        gridContainer.appendChild(cell);
+    // Hàm thông báo cho các tính năng vẽ (Sẽ lập trình sâu vào sau)
+    function openFeature(name) {
+        alert(`Bạn vừa mở tính năng: ${name}.\nTính năng này đang được phát triển tiếp theo!`);
     }
-}
-function setCurrentColor(color) { currentColor = color; }
-function applySkin() { alert("Đã áp dụng trang phục pixel tự vẽ lên nhân vật!"); }
 
-// --- HỆ THỐNG ĐẾM NGƯỢC LOBBY ---
-function startLobbyTimer() {
-    timerInterval = setInterval(() => {
-        if (gameState === "LOBBY") {
-            lobbyTimer--;
-            document.getElementById("gameStatus").innerText = `TRẬN ĐẤU BẮT ĐẦU SAU: ${lobbyTimer}s (LOBBY)`;
-            
-            if (lobbyTimer <= 0) {
-                gameState = "GAMEPLAY";
-                document.getElementById("gameStatus").innerText = "💥 TRẬN ĐẤU BẮT ĐẦU! HÃY TIÊU DIỆT NHAU! 💥";
-                document.getElementById("gameStatus").style.color = "#ff4757";
-                clearInterval(timerInterval);
-            }
+    // Hiển thị phần nhập Code phòng
+    function showRoomSection() {
+        roomSection.style.display = "block";
+    }
+    function hideRoomSection() {
+        roomSection.style.display = "none";
+    }
+
+    // HÀM 1: TỰ TẠO PHÒNG MỚI (SỞ HỮU CODE)
+    function createNewRoom() {
+        // Tạo ngẫu nhiên 1 chuỗi code phòng gồm 5 chữ cái ngẫu nhiên (Ví dụ: PK7XW)
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let generatedCode = '';
+        for (let i = 0; i < 5; i++) {
+            generatedCode += characters.charAt(Math.floor(Math.random() * characters.length));
         }
-    }, 1000);
-}
-startLobbyTimer();
+        
+        currentRoomCode = generatedCode;
+        isRoomOwner = true; // Đánh dấu là chủ phòng
 
-// --- VẬT LÝ VÀ DI CHUYỂN PARKOUR ---
-window.addEventListener("keydown", (e) => KEYS[e.code] = true);
-window.addEventListener("keyup", (e) => KEYS[e.code] = false);
+        // Chuyển giao diện sang sảnh chờ game
+        mainPortal.style.display = "none";
+        gameLobby.style.display = "block";
+        roomIdentityDisplay.innerText = `👑 CODE PHÒNG CỦA BẠN: ${currentRoomCode} (BẠN LÀ CHỦ PHÒNG)`;
+        roomIdentityDisplay.style.borderColor = "#2ed573";
 
-function checkCollision(rect1, rect2) {
-    return rect1.x < rect2.x + rect2.width && rect1.x + rect1.width > rect2.x &&
-           rect1.y < rect2.y + rect2.height && rect1.y + rect1.height > rect2.y;
-}
+        // Kích hoạt cơ chế nhảy nhót thử nghiệm trong sảnh chờ
+        initLobbyPhysics();
+    }
 
-function update() {
-    if (KEYS["KeyA"] || KEYS["ArrowLeft"]) player.vx = -player.speed;
-    else if (KEYS["KeyD"] || KEYS["ArrowRight"]) player.vx = player.speed;
-    else player.vx = 0;
+    // HÀM 2: NHẬP CODE ĐỂ THAM GIA PHÒNG KHÁC
+    function joinRoomByCode() {
+        let enteredCode = roomCodeInput.value.trim().toUpperCase();
+        
+        if (enteredCode === "") {
+            alert("Vui lòng nhập mã code phòng để tham gia!");
+            return;
+        }
 
-    player.vy += GRAVITY;
-    if (player.isOnWall && player.vy > 1) player.vy = 0.8; // Giảm tốc độ rơi khi bám tường
+        currentRoomCode = enteredCode;
+        isRoomOwner = false; // Chỉ là người tham gia
 
-    player.x += player.vx;
-    player.isOnWall = false; player.wallDir = 0;
+        // Chuyển giao diện sang sảnh chờ game
+        mainPortal.style.display = "none";
+        gameLobby.style.display = "block";
+        roomIdentityDisplay.innerText = `🎮 ĐÃ VÀO PHÒNG: ${currentRoomCode} (BẠN LÀ THÀNH VIÊN)`;
+        roomIdentityDisplay.style.borderColor = "#1e90ff";
+
+        initLobbyPhysics();
+    }
+
+    // Thoát khỏi phòng game quay lại web portal
+    function leaveRoom() {
+        gameLobby.style.display = "none";
+        mainPortal.style.display = "block";
+        roomCodeInput.value = "";
+    }
+
+    // --- LOGIC PARKOUR KHỞI ĐỘNG TRONG SẢNH CHỜ ---
+    const canvas = document.getElementById("lobbyCanvas");
+    const ctx = canvas.getContext("2d");
+    const GRAVITY = 0.4;
+    const KEYS = {};
     
-    for (let plat of platforms) {
-        if (checkCollision(player, plat)) {
-            if (player.vx > 0) { player.x = plat.x - player.width; if (!player.isGrounded) { player.isOnWall = true; player.wallDir = 1; } }
-            if (player.vx < 0) { player.x = plat.x + plat.width; if (!player.isGrounded) { player.isOnWall = true; player.wallDir = -1; } }
+    const player = { x: 100, y: 200, width: 20, height: 28, vx: 0, vy: 0, speed: 4, jumpForce: 8.5, isGrounded: false };
+    const platforms = [
+        { x: 0, y: 320, width: 700, height: 30 },
+        { x: 200, y: 240, width: 300, height: 15 }
+    ];
+
+    window.addEventListener("keydown", (e) => KEYS[e.code] = true);
+    window.addEventListener("keyup", (e) => KEYS[e.code] = false);
+
+    function initLobbyPhysics() {
+        // Reset vị trí người chơi khi vào sảnh mới
+        player.x = 100; player.y = 200; player.vx = 0; player.vy = 0;
+    }
+
+    function gameLoop() {
+        if (gameLobby.style.display === "block") {
+            // Cập nhật di chuyển
+            if (KEYS["KeyA"] || KEYS["ArrowLeft"]) player.vx = -player.speed;
+            else if (KEYS["KeyD"] || KEYS["ArrowRight"]) player.vx = player.speed;
+            else player.vx = 0;
+
+            player.vy += GRAVITY;
+            player.x += player.vx;
+
+            // Chặn biên màn hình trái phải
+            if (player.x < 0) player.x = 0;
+            if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+
+            player.y += player.vy;
+            player.isGrounded = false;
+
+            // Xử lý va chạm nền tảng
+            for (let plat of platforms) {
+                if (player.x < plat.x + plat.width && player.x + player.width > plat.x &&
+                    player.y < plat.y + plat.height && player.y + player.height > plat.y) {
+                    if (player.vy > 0) {
+                        player.y = plat.y - player.height;
+                        player.vy = 0;
+                        player.isGrounded = true;
+                    }
+                }
+            }
+
+            if ((KEYS["KeyW"] || KEYS["Space"]) && player.isGrounded) {
+                player.vy = -player.jumpForce;
+                player.isGrounded = false;
+            }
+
+            // Vẽ đồ họa
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Vẽ map sảnh chờ
+            ctx.fillStyle = "#3e445b";
+            for (let plat of platforms) ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+
+            // Vẽ nhân vật pixel của người chơi
+            ctx.fillStyle = isRoomOwner ? "#2ed573" : "#ff4757"; // Chủ phòng màu xanh lá, khách màu đỏ
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            // Vẽ mắt
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(player.vx >= 0 ? player.x + 12 : player.x + 3, player.y + 5, 5, 5);
         }
+        requestAnimationFrame(gameLoop);
     }
-
-    player.y += player.vy; player.isGrounded = false;
-    for (let plat of platforms) {
-        if (checkCollision(player, plat)) {
-            if (player.vy > 0) { player.y = plat.y - player.height; player.vy = 0; player.isGrounded = true; }
-            if (player.vy < 0) { player.y = plat.y + plat.height; player.vy = 0; }
-        }
-    }
-
-    if ((KEYS["KeyW"] || KEYS["Space"] || KEYS["ArrowUp"])) {
-        if (player.isGrounded) { player.vy = -player.jumpForce; player.isGrounded = false; }
-        else if (player.isOnWall) {
-            player.vy = -player.jumpForce * 0.9;
-            player.vx = -player.wallDir * player.speed * 1.4;
-            player.x += player.vx; player.isOnWall = false;
-        }
-    }
-}
-
-// --- VẼ ĐỒ HỌA (RENDER) ---
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Vẽ nền background phân biệt chế độ chơi
-    ctx.fillStyle = gameState === "LOBBY" ? "#1d212a" : "#2d1b1b";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Vẽ địa hình (Bản đồ)
-    ctx.fillStyle = gameState === "LOBBY" ? "#4a4e69" : "#721c24";
-    for (let plat of platforms) {
-        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-    }
-
-    // VẼ NHÂN VẬT DỰA TRÊN MA TRẬN 16x16 TỰ VẼ
-    const pixelW = player.width / 16;
-    const pixelH = player.height / 16;
-
-    for (let r = 0; r < 16; r++) {
-        for (let c = 0; c < 16; c++) {
-            ctx.fillStyle = playerSkin[r][c];
-            ctx.fillRect(player.x + (c * pixelW), player.y + (r * pixelH), pixelW + 0.5, pixelH + 0.5);
-        }
-    }
-
-    // Vẽ thêm đôi mắt lên trên trang phục để biết hướng đi
-    ctx.fillStyle = "#ffffff";
-    let eyeX = player.vx >= 0 ? player.x + 16 : player.x + 4;
-    ctx.fillRect(eyeX, player.y + 6, 5, 5);
-    ctx.fillStyle = "#000";
-    ctx.fillRect(player.x + 10, player.y + 14, 4, 2); // Cái miệng nhỏ tinh nghịch
-}
-
-function gameLoop() {
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-gameLoop();
+    gameLoop();
 </script>
+
 </body>
 </html>
