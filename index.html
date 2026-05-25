@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Pixel Parkour Prototype</title>
+    <title>Pixel Parkour Lobby & Editor</title>
     <style>
         body {
             margin: 0;
@@ -11,188 +11,252 @@
             color: #fff;
             font-family: 'Courier New', Courier, monospace;
             display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            gap: 20px;
+        }
+        .container {
+            display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
         }
-        h1 {
-            margin-bottom: 10px;
-            font-size: 24px;
-            text-shadow: 2px 2px #000;
-        }
+        h1 { margin: 0 0 10px 0; font-size: 22px; text-shadow: 2px 2px #000; color: #ffbc00; }
         canvas {
             border: 4px solid #3a3a50;
             background-color: #282c34;
-            box-shadow: 0px 10px 20px rgba(0,0,0,0.5);
-            image-rendering: pixelated; /* Giữ nét pixel retro */
+            image-rendering: pixelated;
         }
-        .controls {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #a0a0c0;
+        /* Giao diện bảng vẽ Pixel bên cạnh */
+        .editor-panel {
+            background: #252833;
+            border: 4px solid #3a3a50;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-radius: 4px;
         }
+        .pixel-grid {
+            display: grid;
+            grid-template-columns: repeat(16, 15px);
+            grid-template-rows: repeat(16, 15px);
+            gap: 1px;
+            background: #111;
+            padding: 2px;
+            border: 2px solid #555;
+        }
+        .pixel-cell {
+            width: 15px;
+            height: 15px;
+            background-color: #fff;
+            cursor: pointer;
+        }
+        .palette {
+            display: flex;
+            gap: 5px;
+            margin: 10px 0;
+        }
+        .color-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+        .btn {
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px #c02c39;
+        }
+        .btn:active { transform: translateY(4px); box-shadow: none; }
+        .controls { margin-top: 10px; font-size: 12px; color: #a0a0c0; text-align: center; }
     </style>
 </head>
 <body>
 
-    <h1>RETRO PARKOUR PROTOTYPE</h1>
-    <canvas id="gameCanvas" width="800" height="450"></canvas>
-    <div class="controls">
-        Điều khiển: <b>A, D</b> - Di chuyển | <b>W hoặc SPACE</b> - Nhảy | <b>Bám tường + Nhảy</b> - Nhảy tường (Wall Jump)
+    <div class="container">
+        <h1 id="gameStatus">ĐANG Ở MÀN HÌNH CHỜ (LOBBY)</h1>
+        <canvas id="gameCanvas" width="700" height="400"></canvas>
+        <div class="controls">
+            <b>A, D</b>: Chạy | <b>W / SPACE</b>: Nhảy & Nhảy Tường <br>
+            <i>Mẹo: Trong sảnh chờ, cậu vẫn có thể nhảy nhót parkour thoải mái!</i>
+        </div>
+    </div>
+
+    <div class="editor-panel">
+        <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #00ffcc;">VẼ ÁO NHÂN VẬT (16x16)</h3>
+        <div class="pixel-grid" id="pixelGrid"></div>
+        
+        <div class="palette">
+            <div class="color-dot" style="background: #ff4757;" onclick="setCurrentColor('#ff4757')"></div>
+            <div class="color-dot" style="background: #2ed573;" onclick="setCurrentColor('#2ed573')"></div>
+            <div class="color-dot" style="background: #1e90ff;" onclick="setCurrentColor('#1e90ff')"></div>
+            <div class="color-dot" style="background: #ffa500;" onclick="setCurrentColor('#ffa500')"></div>
+            <div class="color-dot" style="background: #ffffff;" onclick="setCurrentColor('#ffffff')"></div>
+            <div class="color-dot" style="background: #2f3542;" onclick="setCurrentColor('#2f3542')"></div>
+        </div>
+
+        <button class="btn" onclick="applySkin()">Mặc Áo Này</button>
     </div>
 
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-// Cấu hình vật lý cơ bản
-const GRAVITY = 0.5;
+// Trạng thái game: "LOBBY" (Chờ) hoặc "GAMEPLAY" (Đang đấu)
+let gameState = "LOBBY"; 
+let lobbyTimer = 10; // 10 giây đếm ngược để bắt đầu trận
+let timerInterval;
+
+const GRAVITY = 0.4;
 const KEYS = {};
 
-// Khởi tạo người chơi (Khối vuông đại diện trước khi vẽ nhân vật)
+// Khởi tạo người chơi
 const player = {
-    x: 100,
-    y: 300,
-    width: 20,
-    height: 30,
-    vx: 0,
-    vy: 0,
-    speed: 5,
-    jumpForce: 10,
-    isGrounded: false,
-    isOnWall: false,
-    wallDir: 0 // -1: tường bên trái, 1: tường bên phải
+    x: 100, y: 300, width: 24, height: 32, vx: 0, vy: 0,
+    speed: 4.5, jumpForce: 9, isGrounded: false, isOnWall: false, wallDir: 0
 };
 
-// Định nghĩa bản đồ thử nghiệm (Hệ thống các khối gạch - Bản mẫu của vẽ Map sau này)
+// Khởi tạo bộ nhớ skin (Mặc định là áo màu đỏ #ff4757 phủ đầy mảng 16x16)
+let playerSkin = Array(16).fill().map(() => Array(16).fill("#ff4757"));
+let currentColor = "#ff4757";
+
+// Địa hình map sảnh chờ
 const platforms = [
-    { x: 0, y: 420, width: 800, height: 30 }, // Mặt đất chính
-    { x: 200, y: 320, width: 120, height: 20 }, // Bậc nhảy 1
-    { x: 400, y: 240, width: 150, height: 20 }, // Bậc nhảy 2
-    { x: 650, y: 160, width: 100, height: 20 }, // Bậc nhảy 3
-    { x: 50, y: 180, width: 30, height: 240 },  // Cột tường trái để test Wall Jump
-    { x: 600, y: 280, width: 30, height: 140 }   // Cột tường phải
+    { x: 0, y: 370, width: 700, height: 30 },
+    { x: 250, y: 270, width: 200, height: 15 },
+    { x: 80, y: 190, width: 100, height: 15 },
+    { x: 520, y: 190, width: 100, height: 15 },
+    { x: 0, y: 0, width: 20, height: 400 }, // Tường trái để bám đuôi parkour
+    { x: 680, y: 0, width: 20, height: 400 } // Tường phải
 ];
 
-// Lắng nghe sự kiện bàn phím
+// --- KHU VỰC XỬ LÝ BẢNG VẼ PIXEL ---
+const gridContainer = document.getElementById("pixelGrid");
+for (let r = 0; r < 16; r++) {
+    for (let c = 0; c < 16; c++) {
+        const cell = document.createElement("div");
+        cell.classList.add("pixel-cell");
+        cell.style.backgroundColor = "#ff4757"; // Áo đỏ mặc định
+        cell.addEventListener("click", () => {
+            cell.style.backgroundColor = currentColor;
+            playerSkin[r][c] = currentColor;
+        });
+        gridContainer.appendChild(cell);
+    }
+}
+function setCurrentColor(color) { currentColor = color; }
+function applySkin() { alert("Đã áp dụng trang phục pixel tự vẽ lên nhân vật!"); }
+
+// --- HỆ THỐNG ĐẾM NGƯỢC LOBBY ---
+function startLobbyTimer() {
+    timerInterval = setInterval(() => {
+        if (gameState === "LOBBY") {
+            lobbyTimer--;
+            document.getElementById("gameStatus").innerText = `TRẬN ĐẤU BẮT ĐẦU SAU: ${lobbyTimer}s (LOBBY)`;
+            
+            if (lobbyTimer <= 0) {
+                gameState = "GAMEPLAY";
+                document.getElementById("gameStatus").innerText = "💥 TRẬN ĐẤU BẮT ĐẦU! HÃY TIÊU DIỆT NHAU! 💥";
+                document.getElementById("gameStatus").style.color = "#ff4757";
+                clearInterval(timerInterval);
+            }
+        }
+    }, 1000);
+}
+startLobbyTimer();
+
+// --- VẬT LÝ VÀ DI CHUYỂN PARKOUR ---
 window.addEventListener("keydown", (e) => KEYS[e.code] = true);
 window.addEventListener("keyup", (e) => KEYS[e.code] = false);
 
-// Hàm kiểm tra va chạm (AABB Collision)
 function checkCollision(rect1, rect2) {
-    return rect1.x < rect2.x + rect2.width &&
-           rect1.x + rect1.width > rect2.x &&
-           rect1.y < rect2.y + rect2.height &&
-           rect1.y + rect1.height > rect2.y;
+    return rect1.x < rect2.x + rect2.width && rect1.x + rect1.width > rect2.x &&
+           rect1.y < rect2.y + rect2.height && rect1.y + rect1.height > rect2.y;
 }
 
-// Cập nhật trạng thái game hàng khung hình
 function update() {
-    // 1. Di chuyển ngang
     if (KEYS["KeyA"] || KEYS["ArrowLeft"]) player.vx = -player.speed;
     else if (KEYS["KeyD"] || KEYS["ArrowRight"]) player.vx = player.speed;
     else player.vx = 0;
 
-    // Trọng lực tác động
     player.vy += GRAVITY;
+    if (player.isOnWall && player.vy > 1) player.vy = 0.8; // Giảm tốc độ rơi khi bám tường
 
-    // Giới hạn tốc độ rơi khi bám tường (Tạo cảm giác trượt tường retro)
-    if (player.isOnWall && player.vy > 1) {
-        player.vy = 1; // Trượt xuống từ từ
-    }
-
-    // Áp dụng vận tốc vào vị trí tạm thời
     player.x += player.vx;
-    
-    // Xử lý va chạm theo trục X (Tường)
-    player.isOnWall = false;
-    player.wallDir = 0;
+    player.isOnWall = false; player.wallDir = 0;
     
     for (let plat of platforms) {
         if (checkCollision(player, plat)) {
-            if (player.vx > 0) { // Đang đi sang phải đập vào tường
-                player.x = plat.x - player.width;
-                if (!player.isGrounded) { player.isOnWall = true; player.wallDir = 1; }
-            }
-            if (player.vx < 0) { // Đang đi sang trái đập vào tường
-                player.x = plat.x + plat.width;
-                if (!player.isGrounded) { player.isOnWall = true; player.wallDir = -1; }
-            }
+            if (player.vx > 0) { player.x = plat.x - player.width; if (!player.isGrounded) { player.isOnWall = true; player.wallDir = 1; } }
+            if (player.vx < 0) { player.x = plat.x + plat.width; if (!player.isGrounded) { player.isOnWall = true; player.wallDir = -1; } }
         }
     }
 
-    player.y += player.vy;
-    player.isGrounded = false;
-
-    // Xử lý va chạm theo trục Y (Đất/Trần nhà)
+    player.y += player.vy; player.isGrounded = false;
     for (let plat of platforms) {
         if (checkCollision(player, plat)) {
-            if (player.vy > 0) { // Đang rơi xuống đất
-                player.y = plat.y - player.height;
-                player.vy = 0;
-                player.isGrounded = true;
-            }
-            if (player.vy < 0) { // Đang nhảy đụng trần
-                player.y = plat.y + plat.height;
-                player.vy = 0;
-            }
+            if (player.vy > 0) { player.y = plat.y - player.height; player.vy = 0; player.isGrounded = true; }
+            if (player.vy < 0) { player.y = plat.y + plat.height; player.vy = 0; }
         }
     }
 
-    // 2. Xử lý Nhảy và Nhảy Tường (Parkour)
     if ((KEYS["KeyW"] || KEYS["Space"] || KEYS["ArrowUp"])) {
-        if (player.isGrounded) {
-            // Nhảy bình thường từ mặt đất
-            player.vy = -player.jumpForce;
-            player.isGrounded = false;
-        } else if (player.isOnWall) {
-            // WALL JUMP: Đẩy người chơi ra hướng ngược lại của tường
+        if (player.isGrounded) { player.vy = -player.jumpForce; player.isGrounded = false; }
+        else if (player.isOnWall) {
             player.vy = -player.jumpForce * 0.9;
-            player.vx = -player.wallDir * player.speed * 1.5;
-            player.x += player.vx; // Tạo lực đẩy ra xa tường ngay lập tức
-            player.isOnWall = false;
+            player.vx = -player.wallDir * player.speed * 1.4;
+            player.x += player.vx; player.isOnWall = false;
         }
     }
 }
 
-// Vẽ đồ họa lên màn hình canvas
+// --- VẼ ĐỒ HỌA (RENDER) ---
 function draw() {
-    // Xóa màn hình cũ
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Vẽ các khối nền tảng (Bản đồ)
-    ctx.fillStyle = "#4e54c8";
+    // Vẽ nền background phân biệt chế độ chơi
+    ctx.fillStyle = gameState === "LOBBY" ? "#1d212a" : "#2d1b1b";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Vẽ địa hình (Bản đồ)
+    ctx.fillStyle = gameState === "LOBBY" ? "#4a4e69" : "#721c24";
     for (let plat of platforms) {
         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-        // Vẽ thêm viền trên để nhìn rõ khối retro
-        ctx.fillStyle = "#8f94fb";
-        ctx.fillRect(plat.x, plat.y, plat.width, 4);
-        ctx.fillStyle = "#4e54c8";
     }
 
-    // Vẽ người chơi (Màu đỏ năng động)
-    ctx.fillStyle = player.isOnWall ? "#ff6b6b" : "#ff4757"; // Đổi màu nhẹ khi đang bám tường
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-    
-    // Vẽ mắt cho nhân vật vuông nhìn cho dễ thương và biết hướng quay mặt
+    // VẼ NHÂN VẬT DỰA TRÊN MA TRẬN 16x16 TỰ VẼ
+    const pixelW = player.width / 16;
+    const pixelH = player.height / 16;
+
+    for (let r = 0; r < 16; r++) {
+        for (let c = 0; c < 16; c++) {
+            ctx.fillStyle = playerSkin[r][c];
+            ctx.fillRect(player.x + (c * pixelW), player.y + (r * pixelH), pixelW + 0.5, pixelH + 0.5);
+        }
+    }
+
+    // Vẽ thêm đôi mắt lên trên trang phục để biết hướng đi
     ctx.fillStyle = "#ffffff";
-    let eyeOffset = player.vx >= 0 ? 12 : 2;
-    if (player.vx === 0 && player.isOnWall) eyeOffset = player.wallDir === 1 ? 12 : 2;
-    ctx.fillRect(player.x + eyeOffset, player.y + 6, 6, 6);
+    let eyeX = player.vx >= 0 ? player.x + 16 : player.x + 4;
+    ctx.fillRect(eyeX, player.y + 6, 5, 5);
+    ctx.fillStyle = "#000";
+    ctx.fillRect(player.x + 10, player.y + 14, 4, 2); // Cái miệng nhỏ tinh nghịch
 }
 
-// Vòng lặp game cốt lõi (Game Loop)
 function gameLoop() {
     update();
     draw();
     requestAnimationFrame(gameLoop);
 }
-
-// Kích hoạt game chạy
 gameLoop();
 </script>
-
 </body>
 </html>
