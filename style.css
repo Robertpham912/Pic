@@ -1,0 +1,97 @@
+/* Thiết lập font nền Retro Game */
+body {
+    margin: 0;
+    background-color: #12121a;
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Thanh Tài Khoản Navbar phía trên */
+.account-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 55px;
+    background: #1c1c27;
+    border-bottom: 3px solid #3a3a50;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+.user-info { font-weight: bold; font-size: 14px; }
+.status-logged-out { color: #ff4757; }
+.logged-name { color: #ffbc00; text-shadow: 1px 1px #000; }
+.auth-buttons { display: flex; gap: 10px; }
+
+/* Khung cửa sổ tổng quát */
+.window-box {
+    background: #1c1c27;
+    border: 4px solid #3a3a50;
+    padding: 25px;
+    width: 500px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    border-radius: 6px;
+    display: none; /* Điều khiển ẩn hiện qua JS */
+}
+.small-window { width: 380px; text-align: center; }
+.large-window { width: 740px; }
+
+/* Định dạng chữ tiêu đề */
+h1 { color: #ffbc00; font-size: 24px; margin: 0 0 5px 0; text-shadow: 2px 2px #000; text-transform: uppercase; text-align: center;}
+.subtitle { color: #8a8ab0; font-size: 11px; margin-bottom: 25px; text-align: center; }
+
+/* Thiết kế Menu chính */
+.menu-box { display: flex; flex-direction: column; gap: 12px; }
+.btn-menu {
+    background: #2a2a3a; color: #fff; border: 2px solid #52527a;
+    padding: 14px; font-size: 15px; font-family: inherit; font-weight: bold;
+    cursor: pointer; transition: 0.2s; text-transform: uppercase; text-align: left;
+}
+.btn-menu:hover { background: #ff4757; border-color: #ff6b6b; transform: scale(1.01); }
+.btn-menu:disabled { background: #1a1a24; color: #555; border-color: #2b2b3a; cursor: not-allowed; }
+
+/* Phân hệ phòng game chờ */
+.room-section { display: none; margin-top: 15px; padding-top: 15px; border-top: 2px dashed #3a3a50; text-align: center; }
+.room-actions { display: flex; gap: 10px; justify-content: center; margin-top: 5px; }
+.input-code {
+    background: #12121a; border: 2px solid #52527a; color: #ffbc00;
+    padding: 10px; font-family: inherit; font-size: 16px; text-align: center; width: 60%; margin-bottom: 10px; text-transform: uppercase;
+}
+
+/* Các lớp nút hành động */
+.btn-action { padding: 8px 16px; font-family: inherit; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.1s; }
+.btn-action:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-blue { background: #1e90ff; color: white; }
+.btn-green { background: #2ed573; color: white; }
+.btn-red { background: #ff4757; color: white; }
+.btn-back { background: #57606f; color: white; padding: 10px; width: 100%; margin-top: 15px; }
+
+/* Form nhập dữ liệu */
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+.auth-form input { background: #12121a; border: 2px solid #52527a; padding: 11px; color: white; font-family: inherit; font-size: 14px; }
+
+/* Giao diện Editor */
+.studio-layout { display: flex; gap: 20px; justify-content: center; align-items: center; margin: 15px 0; }
+.pixel-grid { display: grid; grid-template-columns: repeat(16, 17px); gap: 1px; background: #111; padding: 4px; border: 2px solid #52527a; }
+.pixel-cell { width: 17px; height: 17px; cursor: pointer; box-sizing: border-box; }
+.pixel-cell:hover { border: 1px solid #fff; }
+.palette { display: flex; flex-direction: column; gap: 8px; }
+.color-dot { width: 26px; height: 26px; border-radius: 4px; cursor: pointer; border: 2px solid #fff; transition: 0.1s; }
+.color-dot:hover { transform: scale(1.1); }
+.studio-actions { margin-top: 20px; display: flex; justify-content: center; gap: 10px; }
+
+/* Canvas chơi game và làm map */
+.editor-canvas { border: 3px solid #ffbc00; background: #282c34; cursor: crosshair; display: block; margin: 0 auto; image-rendering: pixelated; }
+.tile-selector { display: flex; gap: 10px; margin-bottom: 15px; background: #252535; padding: 10px; border: 2px solid #3a3a50; justify-content: center; }
+.tile-option { padding: 8px 12px; background: #3a3a50; border: 2px solid #555; cursor: pointer; font-size: 12px; font-weight: bold; color: white; font-family: inherit;}
+.tile-option.active { background: #ffbc00; color: #000; border-color: #fff; }
+
+.room-info { background: #252535; padding: 10px; border: 2px solid #ffbc00; font-size: 16px; margin-bottom: 15px; color: #ffbc00; text-align: center; font-weight: bold; }
+canvas { border: 4px solid #3a3a50; background: #282c34; image-rendering: pixelated; display: block; margin: 0 auto; }
+.game-controls-hint { color: #a0a0c0; font-size: 12px; margin-top: 10px; text-align: center; line-height: 1.4; }
